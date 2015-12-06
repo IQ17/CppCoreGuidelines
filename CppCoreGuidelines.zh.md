@@ -251,7 +251,7 @@ We do not limit our comment in the **Enforcement** sections to things we know ho
 Tools that implement these rules shall respect the following syntax to explicitly suppress a rule:
 
     [[suppress(tag)]]
-    
+
 where "tag" is the anchor name of the item where the Enrocement rule appears (e.g., for C.134 it is "Rh-public"), or the name of a profile group-of-rules ("types", "bounds", or "lifetime").
 
 
@@ -458,7 +458,7 @@ Use an up-to-date C++ compiler (currently C++11 or C++14) with a set of options 
         // ... do something with v[i] ...
     }
 
-上面的代码里没有表达出"在 `v` 的元素上进行遍历"的意图. 这里还暴露了一个作为实现细节的索引(这就有误用的可能), 并且 `i` 的生存时间可能还超出了循环体, 这可能是, 也可能不是作者的意图. 但读者却没有办法单单从这一段代码里看出来. 
+上面的代码里没有表达出"在 `v` 的元素上进行遍历"的意图. 这里还暴露了一个作为实现细节的索引(这就有误用的可能), 并且 `i` 的生存时间可能还超出了循环体, 这可能是, 也可能不是作者的意图. 但读者却没有办法单单从这一段代码里看出来.
 
 更好的做法:
 
@@ -2971,7 +2971,7 @@ Pointers and references to locals shouldn't outlive their scope. Lambdas that ca
 ???
 
 # <a name="S-class"></a> C: Classes and Class Hierarchies
-
+一个类是一种用户定义的类型
 A class is a user-defined type, for which a programmer can define the representation, operations, and interfaces.
 Class hierarchies are used to organize related classes into hierarchical structures.
 
@@ -13482,8 +13482,8 @@ Here is an example of the last option:
             return p;
         }
     };
-    
-    
+
+
     class D : public B {                 // some derived class
     public:
         void f() override { /* ...  */ };
@@ -13494,7 +13494,7 @@ Here is an example of the last option:
         template<class T>
         friend shared_ptr<T> B::Create();
     };    
-    
+
     shared_ptr<D> p = D::Create<D>();    // creating a D object
 
 This design requires the following discipline:
