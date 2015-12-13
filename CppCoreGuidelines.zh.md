@@ -2971,9 +2971,10 @@ Pointers and references to locals shouldn't outlive their scope. Lambdas that ca
 ???
 
 # <a name="S-class"></a> C: Classes and Class Hierarchies
-一个类是一种用户定义的类型
 A class is a user-defined type, for which a programmer can define the representation, operations, and interfaces.
+一个类是一种用户定义的类型。对于这种类型，程序员可以定义它的表现，操作和接口。
 Class hierarchies are used to organize related classes into hierarchical structures.
+而类的层级结构则被用于将相关的类组织成层级结构。
 
 Class rule summary:
 
@@ -2995,10 +2996,13 @@ Subsections:
 * [C.union: Unions](#SS-union)
 
 ### <a name="Rc-org"></a> C.1: Organize related data into structures (`struct`s or `class`es)
+将相关的数据组织成结构体(`struct`s or `class`es)
 
 ##### Reason
+原因
 
 Ease of comprehension. If data is related (for fundamental reasons), that fact should be reflected in code.
+便于理解。如果数据之间（由于某些基本原因）确实是相关的，那么这种相关性就应该在代码中体现出来。
 
 ##### Example
 
@@ -3006,26 +3010,39 @@ Ease of comprehension. If data is related (for fundamental reasons), that fact s
     void draw(Point from, Point to);          // better
 
 ##### Note
+注释
 
 A simple class without virtual functions implies no space or time overhead.
+一个没有虚函数的简单类意味着没有空间或时间上的开销。
 
 ##### Note
+注释
 
 From a language perspective `class` and `struct` differ only in the default visibility of their members.
+从语言的角度来说，`class` 和 `struct` 之间唯一的区别就是他们成员的缺省可见性不同。
 
 ##### Enforcement
 
 Probably impossible. Maybe a heuristic looking for data items used together is possible.
+恐怕不可能。也许用一种启发式的方式寻找在一起使用的数据是可能的。
+
 
 ### <a name="Rc-struct"></a> C.2: Use `class` if the class has an invariant; use `struct` if the data members can vary independently
+使用`class`如果类有某种不变性；使用`struct`如果成员数据可以独立变化
 
 ##### Reason
 
 Ease of comprehension. The use of `class` alerts the programmer to the need for an invariant.
+便于理解。使用`class`可以提醒程序员她/他需要维护一种不变性。
 
 ##### Note
 
-An invariant is a logical condition for the members of an object that a constructor must establish for the public member functions to assume. After the invariant is established (typically by a constructor) every member function can be called for the object. An invariant can be stated informally (e.g., in a comment) or more formally using `Expects`.
+An invariant is a logical condition for the members of an object that a constructor must establish for the public member functions to assume. 
+不变性是加诸于对象成员的一种逻辑条件，这种逻辑条件必须被构造函数确立才能使公共成员函数被使用。
+After the invariant is established (typically by a constructor) every member function can be called for the object. 
+在这种不变性确立之后（通常有构造函数确立），每个成员函数就都能够被对象调用了。
+An invariant can be stated informally (e.g., in a comment) or more formally using `Expects`.
+不变性可以非正式的加以说明（比如在注释里说明）或者比较正式的使用`Expects`。
 
 ##### Example
 
@@ -3049,12 +3066,15 @@ but:
 ##### Enforcement
 
 Look for `struct`s with all data private and `class`es with public members.
+寻找将数据声明为私有成员的`struct`s和将成员声明为公共成员的`class`es
 
 ### <a name="Rc-interface"></a> C.3: Represent the distinction between an interface and an implementation using a class
+使用类区分接口和实现
 
 ##### Reason
 
 An explicit distinction between interface and implementation improves readability and simplifies maintenance.
+显式区分接口和实现不仅提高了可读性还是得维护得到简化。
 
 ##### Example
 
@@ -3070,13 +3090,18 @@ An explicit distinction between interface and implementation improves readabilit
     };
 
 For example, we can now change the representation of a `Date` without affecting its users (recompilation is likely, though).
+以这段代码为例，我们可以在改变`Date`类的表现的同时不影响使用它的用户们（但可能他们需要重新编译代码）
 
 ##### Note
 
 Using a class in this way to represent the distinction between interface and implementation is of course not the only way.
+使用类来区分接口和实现当然不是唯一的方法。
 For example, we can use a set of declarations of freestanding functions in a namespace, an abstract base class, or a template function with concepts to represent an interface.
+比如，我们可以通过在一个命名空间里声明一组独立函数，或者一个抽象基类，又或者一个带有概念的模板函数来表示接口。
 The most important issue is to explicitly distinguish between an interface and its implementation "details."
+最重要的问题是显示地区分接口和实现细节。
 Ideally, and typically, an interface is far more stable than its implementation(s).
+理想情况下，通常也是，接口要比它的实现要稳定的多。
 
 ##### Enforcement
 
