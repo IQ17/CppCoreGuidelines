@@ -3090,7 +3090,7 @@ An explicit distinction between interface and implementation improves readabilit
     };
 
 For example, we can now change the representation of a `Date` without affecting its users (recompilation is likely, though).
-以这段代码为例，我们可以在改变`Date`类的表现的同时不影响使用它的用户们（但可能他们需要重新编译代码）
+以这段代码为例，我们可以在改变`Date`类的成员变量的同时不影响使用它的用户们（但可能他们需要重新编译代码）
 
 ##### Note
 
@@ -3108,11 +3108,11 @@ Ideally, and typically, an interface is far more stable than its implementation(
 ???
 
 ### <a name="Rc-member"></a> C.4: Make a function a member only if it needs direct access to the representation of a class
-
+除非一个函数需要直接访问类的成员变量，否则不要将它设置为类的成员函数
 ##### Reason
 
 Less coupling than with member functions, fewer functions that can cause trouble by modifying object state, reduces the number of functions that needs to be modified after a change in representation.
-
+减少成员函数的数量能够降低耦合程度；减少可以访问类的成员变量的函数数量少意味着在改变类的表现形式后我们需要修改的函数数量会减少。
 ##### Example
 
     class Date {
@@ -3124,7 +3124,7 @@ Less coupling than with member functions, fewer functions that can cause trouble
     bool operator==(Date, Date);
 
 The "helper functions" have no need for direct access to the representation of a `Date`.
-
+这个"helper"函数没有必要直接访问类'Data'的成员变量
 ##### Note
 
 This rule becomes even better if C++17 gets "uniform function call." ???
@@ -3132,14 +3132,19 @@ This rule becomes even better if C++17 gets "uniform function call." ???
 ##### Enforcement
 
 Look for member function that do not touch data members directly.
+找出那些不需要直接访问成员变量的成员函数
 The snag is that many member functions that do not need to touch data members directly do.
+问题是有很多不需要直接访问成员变量的成员函数确实直接访问了成员变量。
 
 ### <a name="Rc-helper"></a> C.5: Place helper functions in the same namespace as the class they support
+将helper函数放在它支持的类的命名空间下
 
 ##### Reason
 
 A helper function is a function (usually supplied by the writer of a class) that does not need direct access to the representation of the class, yet is seen as part of the useful interface to the class.
+helper函数（通常由类的写者提供）不需要直接访问类的成员变量，但是它们被看作是类接口的一部分。
 Placing them in the same namespace as the class makes their relationship to the class obvious and allows them to be found by argument dependent lookup.
+将这些函数和类放在同一个命名空间下可以明显的表示出两者的关系，并且使得这些函数能够被基于参数的查询找到。
 
 ##### Example
 
@@ -3157,12 +3162,15 @@ Placing them in the same namespace as the class makes their relationship to the 
 ##### Enforcement
 
 * Flag global functions taking argument types from a single namespace.
+标记出那些参数类型来自同一个命名空间的全局函数
 
 ### <a name="Rc-const"></a> C.6: Declare a member function that does not modify the state of its object `const`
+将不修改对象状态的成员函数声明为'const'
 
 ##### Reason
 
 More precise statement of design intent, better readability, more errors caught by the compiler, more optimization opportunities.
+将设计意图更精确的表述出来有很多好处：能够提升可读性，使得编译器更容易发现错误以及更大的优化可能性。
 
 ##### Example
 
@@ -3175,16 +3183,24 @@ More precise statement of design intent, better readability, more errors caught 
 ##### Enforcement
 
 Flag non-`const` member functions that do not write to their objects
+标记出那些不改变对象状态的non-'const'成员函数。
 
 ## <a name="SS-concrete"></a> C.concrete: Concrete types
 
 One ideal for a class is to be a regular type.
+一个理想的类就应该像一个常规类型。
 That means roughly "behaves like an `int`." A concrete type is the simplest kind of class.
+这可以理解为“（类）的表现就像int一样。” 一个具体类型就是一种最简单的类。
 A value of regular type can be copied and the result of a copy is an independent object with the same value as the original.
+一个常规类型对象的值可以被复制，而复制的结果是一个和它值一样的独立对象。
 If a concrete type has both `=` and `==`, `a=b` should result in `a == b` being `true`.
+如果一个具体类型同时定义了'='和'=='，那么运行'a=b'应该使得'a==b'为真。
 Concrete classes without assignment and equality can be defined, but they are (and should be) rare.
+虽然我们可以定义没有赋值运算符和等号运算符的类，但这种情况（应该）比较少。
 The C++ built-in types are regular, and so are standard-library classes, such as `string`, `vector`, and `map`.
+C++内建的数据类型都是常规类型，同样标准库里定义的类也是，比如'string', 'vector'和'map'。
 Concrete types are also often referred to as value types to distinguish them from types uses as part of a hierarchy.
+具体类型通常也被称为值类型以区分它们和那些用作层级一部分的类型。
 
 Concrete type rule summary:
 
