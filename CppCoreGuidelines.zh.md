@@ -3212,8 +3212,11 @@ Concrete type rule summary:
 ##### Reason
 
 A concrete type is fundamentally simpler than a hierarchy:
+一个具体类型根本上要比一个层级简单：
 easier to design, easier to implement, easier to use, easier to reason about, smaller, and faster.
+更容易设计，更容易实现，更容易使用，更容易理解，更小也更快。
 You need a reason (use cases) for using a hierarchy.
+你需要一个理由（使用场景）来使用一个层级。
 
 ##### Example
 
@@ -3241,18 +3244,26 @@ You need a reason (use cases) for using a hierarchy.
     }
 
 If a class can be part of a hierarchy, we (in real code if not necessarily in small examples) must manipulate its objects through pointers or references.
+如果一个类可以被用作一个层级的一部分，（在实际代码里）我们必须要通过指针或者引用来操作这个类的对象。
 That implies more memory overhead, more allocations and deallocations, and more run-time overhead to perform the resulting indirections.
+这意味着更大内存开销，更多的分配和释放，已经更大的运行时开销以间接操作结果。
 
 ##### Note
 
 Concrete types can be stack allocated and be members of other classes.
+具体类型可以创建在栈区，并且可以作为其他类的成员。
 
 ##### Note
 
 The use of indirection is fundamental for run-time polymorphic interfaces.
+采用间接操作本质上是为了实现运行时多态的接口。
+
 The allocation/deallocation overhead is not (that's just the most common case).
+而内存分配释放开销不是（这只是通常如此）。
 We can use a base class as the interface of a scoped object of a derived class.
+我们可以在派生类对象的地方使用基类作为接口。
 This is done where dynamic allocation is prohibited (e.g. hard real-time) and to provide a stable interface to some kinds of plug-ins.
+这么做是在动态分配被禁止的情况下（比如硬实时），为一些插件提供一种稳定的接口。
 
 ##### Enforcement
 
@@ -3263,6 +3274,7 @@ This is done where dynamic allocation is prohibited (e.g. hard real-time) and to
 ##### Reason
 
 Regular types are easier to understand and reason about than types that are not regular (irregularities requires extra effort to understand and use).
+常规类型要比非常规类型更容易理解和推理（非常规类型需要额外的努力去理解和运用）。
 
 ##### Example
 
@@ -3280,6 +3292,7 @@ Regular types are easier to understand and reason about than types that are not 
     if (b1 == b2) error("No!");
 
 In particular, if a concrete type has an assignment also give it an equals operator so that `a=b` implies `a == b`.
+特别的，如果一个具体类型实现了赋值操作符，那么我们也要实现它的相等操作符以使得`a=b` 建议 `a == b`
 
 ##### Enforcement
 
@@ -3288,38 +3301,57 @@ In particular, if a concrete type has an assignment also give it an equals opera
 ## <a name="S-ctor"></a> C.ctor: Constructors, assignments, and destructors
 
 These functions control the lifecycle of objects: creation, copy, move, and destruction.
+这些函数控制着对象的生命周期：创建，拷贝，移动和释放。
 Define constructors to guarantee and simplify initialization of classes.
+同过定义构造函数来确保和简化类的初始化。
 
 These are *default operations*:
+一些“缺省操作”：
 
-* a default constructor: `X()`
-* a copy constructor: `X(const X&)`
-* a copy assignment: `operator=(const X&)`
-* a move constructor: `X(X&&)`
-* a move assignment: `operator=(X&&)`
-* a destructor: `~X()`
+* a default constructor: `X()` 一个构造函数
+* a copy constructor: `X(const X&)` 一个拷贝构造函数
+* a copy assignment: `operator=(const X&)`一个拷贝赋值操作符
+* a move constructor: `X(X&&)`一个移动构造函数
+* a move assignment: `operator=(X&&)`一个移动赋值操作符
+* a destructor: `~X()`一个析构函数
 
 By default, the compiler defines each of these operations if it is used, but the default can be suppressed.
+缺省条件下，编译器会定义用到的操作，但是这些缺省可以被取代。
 
 The default operations are a set of related operations that together implement the lifecycle semantics of an object.
+这些缺省操作组成类一组相关操作，它们共同实现了一个对象的生命周期语义。
 By default, C++ treats classes as value-like types, but not all types are value-like.
+缺省条件下，C++将类看作值类型，但是并不是所有类型都是值。
 
 Set of default operations rules:
+一些缺省操作规则：
 
 * [C.20: If you can avoid defining any default operations, do](#Rc-zero)
+如果能够避免定义任何缺省操作，就不要定义
 * [C.21: If you define or `=delete` any default operation, define or `=delete` them all](#Rc-five)
+如果你定义或者“删除”任何缺省操作，那就定义或者“删除”所有缺省操作。
 * [C.22: Make default operations consistent](#Rc-matched)
+使缺省操作保持一致性
 
 Destructor rules:
+析构函数规则：
 
 * [C.30: Define a destructor if a class needs an explicit action at object destruction](#Rc-dtor)
+如果类的对象析构需要显示的操作，就定义一个析构函数
 * [C.31: All resources acquired by a class must be released by the class's destructor](#Rc-dtor-release)
+所有类获取的资源都必须在类的析构函数里释放
 * [C.32: If a class has a raw pointer (`T*`) or reference (`T&`), consider whether it might be owning](#Rc-dtor-ptr)
+如果一个类有原始指针或者引用时，需要考虑是否原始指针或引用被占有
 * [C.33: If a class has an owning pointer member, define or `=delete` a destructor](#Rc-dtor-ptr2)
+如果一个类有一个占有指针成员，定义或者“删除”析构函数
 * [C.34: If a class has an owning reference member, define or `=delete` a destructor](#Rc-dtor-ref)
+如果一个类有一个占有引用成员，定义或者“删除”析构函数
 * [C.35: A base class with a virtual function needs a virtual destructor](#Rc-dtor-virtual)
+有虚函数的基类需要虚析构函数
 * [C.36: A destructor may not fail](#Rc-dtor-fail)
+析构函数不一定失败
 * [C.37: Make destructors `noexcept`](#Rc-dtor-noexcept)
+让所有析构函数没有异常
 
 Constructor rules:
 
@@ -3364,13 +3396,17 @@ Other default operations rules:
 ## <a name="SS-defop"></a> C.defop: Default Operations
 
 By default, the language supply the default operations with their default semantics.
+缺省条件下，语言提供缺省语义的缺省操作
 However, a programmer can disable or replace these defaults.
+但是程序员可以关闭或者替换这些缺省。
 
 ### <a name="Rc-zero"></a> C.20: If you can avoid defining default operations, do
+如果能够避免定义任何缺省操作，就不要定义
 
 ##### Reason
 
 It's the simplest and gives the cleanest semantics.
+这样最简单也使得语义最干净
 
 ##### Example
 
@@ -3386,6 +3422,7 @@ It's the simplest and gives the cleanest semantics.
     Named_map nm2 {nm};	// copy construct
 
 Since `std::map` and `string` have all the special functions, no further work is needed.
+由于`std::map`和`string`两者都有所有的特殊函数，所以没有更多的工作需要做
 
 ##### Note
 
