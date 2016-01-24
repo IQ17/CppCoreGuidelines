@@ -3434,10 +3434,12 @@ This is known as "the rule of zero".
 For example, a class with a (pointer, size) pair of member and a destructor that `delete`s the pointer could probably be converted to a `vector`.
 
 ### <a name="Rc-five"></a> C.21: If you define or `=delete` any default operation, define or `=delete` them all
+如果你定义或者“删除”任何缺省操作，那就定义或者“删除”所有缺省操作。
 
 ##### Reason
 
 The semantics of the special functions are closely related, so if one needs to be non-default, the odds are that others need modification too.
+特殊函数之间的语义是紧密相关的，所以如果其中一个特殊函数应该是非缺省的，那么很可能其他特殊函数也需要修改。
 
 ##### Example, bad
 
@@ -3459,7 +3461,9 @@ The semantics of the special functions are closely related, so if one needs to b
         // ...
     }
 
-Given that "special attention" was needed for the destructor (here, to deallocate), the likelihood that copy and move assignment (both will implicitly destroy an object) are correct is low (here, we would get double deletion).
+Given that "special attention" was needed for the destructor (here, to deallocate), 
+the likelihood that copy and move assignment (both will implicitly destroy an object) are correct is low (here, we would get double deletion).
+这里的析构函数（这个例子里是释放内存）需要我们的特别注意，（缺省的）拷贝构造和移动赋值（两者都会隐式的销毁对象）很可能是错的（这个例子里可能会出现重复释放）。
 
 ##### Note
 
@@ -3468,26 +3472,38 @@ This is known as "the rule of five" or "the rule of six", depending on whether y
 ##### Note
 
 If you want a default implementation of a default operation (while defining another), write `=default` to show you're doing so intentionally for that function.
+如果你想要保留缺省操作的缺省实现（同时定义另外一个），那么就写上`=default`来明确表明你的意图。
 If you don't want a default operation, suppress it with `=delete`.
+如果你不想保留缺省操作，就写上`=delete`隐藏它。
 
 ##### Note
 
 Compilers enforce much of this rule and ideally warn about any violation.
+编译器会强化这条规则，并且理想情况下会警告任何违反规则的行为
 
 ##### Note
 
 Relying on an implicitly generated copy operation in a class with a destructor is deprecated.
+在一个定义有析构函数的类中依赖隐式生成的拷贝操作是被禁止的。
 
 ##### Enforcement
 
 (Simple) A class should have a declaration (even a `=delete` one) for either all or none of the special functions.
+一个类应该要么有所有特殊函数的声明（包括`=delete`声明），要么都没有。
 
 ### <a name="Rc-matched"></a> C.22: Make default operations consistent
+使缺省操作保持一致性
 
 ##### Reason
 
 The default operations are conceptually a matched set. Their semantics are interrelated.
-Users will be surprised if copy/move construction and copy/move assignment do logically different things. Users will be surprised if constructors and destructors do not provide a consistent view of resource management. Users will be surprised if copy and move don't reflect the way constructors and destructors work.
+缺省操作之间概念上是相互匹配的，他们的语义是相互关联的。
+Users will be surprised if copy/move construction and copy/move assignment do logically different things. 
+用户会感到惊讶如果拷贝/移动构造函数和拷贝/移动赋值在逻辑上是不同的。
+Users will be surprised if constructors and destructors do not provide a consistent view of resource management. 
+用户会感到惊讶如果构造函数和析构函数在资源管理上有所不同。
+Users will be surprised if copy and move don't reflect the way constructors and destructors work.
+用户会感到惊讶如果拷贝和移动无法反映出构造函数和析构函数的工作方式。
 
 ##### Example, bad
 
@@ -3503,28 +3519,41 @@ Users will be surprised if copy/move construction and copy/move assignment do lo
     };
 
 These operations disagree about copy semantics. This will lead to confusion and bugs.
+这些拷贝操作在语义上不一致，它们会导致困惑和bugs
 
 ##### Enforcement
 
 * (Complex) A copy/move constructor and the corresponding copy/move assignment operator should write to the same member variables at the same level of dereference.
+*  一个拷贝/移动构造函数和相应的拷贝/移动赋值操作应该在同一级上解引用同一个成员
 * (Complex) Any member variables written in a copy/move constructor should also be initialized by all other constructors.
+*  任何出现在拷贝/移动构造函数中的成员变量应该同时在其他构造函数中被初始化。
 * (Complex) If a copy/move constructor performs a deep copy of a member variable, then the destructor should modify the member variable.
+*  如果拷贝/移动构造函数对一个成员变量进行了深拷贝，那么析构函数应该修改这个成员变量
 * (Complex) If a destructor is modifying a member variable, that member variable should be written in any copy/move constructors or assignment operators.
+*  如果一个析构函数修改了一个成员变量，那这个成员变量也应该出现在任何拷贝/移动构造函数或赋值操作中。
 
 ## <a name="SS-dtor"></a> C.dtor: Destructors
 
 "Does this class need a destructor?" is a surprisingly powerful design question.
+“这个类需要析构函数吗？”是一个非常好的设计问题
 For most classes the answer is "no" either because the class holds no resources or because destruction is handled by [the rule of zero](#Rc-zero);
+对于大多数类来说，答案是不需要。因为这些类要么不持有资源，要么析构已经根据[the rule of zero]处理了。
 that is, its members can take care of themselves as concerns destruction.
+也就是说，类的成员们在析构问题上可以自行处理。
 If the answer is "yes", much of the design of the class follows (see [the rule of five](#Rc-five)).
+如果答案是需要，类的设计应该遵循[the rule of five]
 
 ### <a name="Rc-dtor"></a> C.30: Define a destructor if a class needs an explicit action at object destruction
+定义析构函数如果一个类需要显式的进行对象析构
 
 ##### Reason
 
 A destructor is implicitly invoked at the end of an object's lifetime.
+析构函数会在一个对象生命周期的结尾被隐式的调用。
 If the default destructor is sufficient, use it.
+如果缺省的析构函数已经够用了，就用它。
 Only define a non-default destructor if a class needs to execute code that is not already part of its members' destructors.
+除非一个类的析构函数需要执行除了成员析构函数之外的代码，否则不要定义非缺省的析构函数。
 
 ##### Example
 
@@ -3550,13 +3579,17 @@ Only define a non-default destructor if a class needs to execute code that is no
     } // act done here
 
 The whole purpose of `final_action` is to get a piece of code (usually a lambda) executed upon destruction.
+`final_action`唯一的目的就是让一段代码（通常是一个lambda表达式）在析构时执行
 
 ##### Note
 
 There are two general categories of classes that need a user-defined destructor:
+两种类通常需要用户定义析构函数：
 
 * A class with a resource that is not already represented as a class with a destructor, e.g., a `vector` or a transaction class.
+* 拥有资源的类，且资源不是用带有析构函数的类来表示的，比如‘vector’或者事务处理类
 * A class that exists primarily to execute an action upon destruction, such as a tracer or `final_action`.
+* 目的主要是在析构时执行的类，比如追踪器或者'final_action'
 
 ##### Example, bad
 
@@ -3571,24 +3604,32 @@ There are two general categories of classes that need a user-defined destructor:
     };
 
 The default destructor does it better, more efficiently, and can't get it wrong.
+缺省的析构函数会做的更好，更有效，并且不会出错。
 
 ##### Note
 
 If the default destructor is needed, but its generation has been suppressed (e.g., by defining a move constructor), use `=default`.
+如果需要缺省的析构函数，但是它的生成被压制了（比如，定义了移动构造函数），通过‘=default’来使用
 
 ##### Enforcement
 
-Look for likely "implicit resources", such as pointers and references. Look for classes with destructors even though all their data members have destructors.
+Look for likely "implicit resources", such as pointers and references. 
+寻找可能的‘隐式资源’，比如指针和引用
+Look for classes with destructors even though all their data members have destructors.
+寻找即使类的所有成员都有析构函数仍然带有析构函数的类
 
 ### <a name="Rc-dtor-release"></a> C.31: All resources acquired by a class must be released by the class's destructor
+所有类获取的资源都必须在类的析构函数里释放
 
 ##### Reason
 
 Prevention of resource leaks, especially in error cases.
+防止资源泄露，尤其是错误情况
 
 ##### Note
 
 For resources represented as classes with a complete set of default operations, this happens automatically.
+对于用含有完整缺省操作的类表示的资源来说，这不是个问题
 
 ##### Example
 
@@ -3598,6 +3639,7 @@ For resources represented as classes with a complete set of default operations, 
     };
 
 `X`'s `ifstream` implicitly closes any file it may have open upon destruction of its `X`.
+在析构‘X’时，‘X’的成员'ifstream'隐式的关闭它可能打开了的文件。
 
 ##### Example, bad
 
@@ -3607,21 +3649,30 @@ For resources represented as classes with a complete set of default operations, 
     };
 
 `X2` may leak a file handle.
+‘X2’可能会造成文件句柄泄漏
 
 ##### Note
 
 What about a sockets that won't close? A destructor, close, or cleanup operation [should never fail](#Rc-dtor-fail).
+如果是对于一个不会关闭的sockets呢？析构函数，关闭或者清除操作
 If it does nevertheless, we have a problem that has no really good solution.
+如果尽管确实如此，我们就遇到了一个并没有真正解决方法的问题
 For starters, the writer of a destructor does not know why the destructor is called and cannot "refuse to act" by throwing an exception.
+首先，析构函数的作者不知道为什么析构函数会被调用，并且不能通过抛出异常来拒绝执行
 See [discussion](#Sd-never-fail).
 To make the problem worse, many "close/release" operations are not retryable.
+使问题更棘手的是，很多‘关闭/释放’操作都是无法重试的。
 Many have tried to solve this problem, but no general solution is known.
+有很多解决问题的尝试，但是没有真正的问题。
 If at all possible, consider failure to close/cleanup a fundamental design error and terminate.
+如果可能的话，可以将关闭/清除失败当作是基础设计错误并停止
 
 ##### Note
 
 A class can hold pointers and references to objects that it does not own.
+类可以拥有不属于它的对象的指针和引用
 Obviously, such objects should not be `delete`d by the class's destructor.
+显然这些对象不应该被类的析构函数删除
 For example:
 
     Preprocessor pp { /* ... */ };
@@ -3634,14 +3685,18 @@ Here `p` refers to `pp` but does not own it.
 
 * (Simple) If a class has pointer or reference member variables that are owners
   (e.g., deemed owners by using `gsl::owner`), then they should be referenced in its destructor.
+  如果类拥有属于自己的成员变量的指针或引用（比如，用‘gsl::owner’表明所有者），那么这些成员变量的指针或引用应该在类的析构函数里提及
 * (Hard) Determine if pointer or reference member variables are owners when there is no explicit statement of ownership
   (e.g., look into the constructors).
+  在没有明确的所有权声明时，确定成员变量的指针或引用的所有者（比如，通过查看构造函数）
 
 ### <a name="Rc-dtor-ptr"></a> C.32: If a class has a raw pointer (`T*`) or reference (`T&`), consider whether it might be owning
+如果一个类有原始指针或者引用时，需要考虑是否原始指针或引用被占有
 
 ##### Reason
 
 There is a lot of code that is non-specific about ownership.
+有大量的代码没有明确所有权
 
 ##### Example
 
@@ -3651,16 +3706,22 @@ There is a lot of code that is non-specific about ownership.
 
 If the `T*` or `T&` is owning, mark it `owning`. If the `T*` is not owning, consider marking it `ptr`.
 This will aide documentation and analysis.
+如果一个‘T*’或‘T&’被占有，把它标记为‘owning’。如果‘T*’没有被占有，标记它为‘ptr’
+这样可以在写文档和分析时有所帮助
+
 
 ##### Enforcement
 
 Look at the initialization of raw member pointers and member references and see if an allocation is used.
+查看原始成员指针和成员引用的初始化，看是否已经分配
 
 ### <a name="Rc-dtor-ptr2"></a> C.33: If a class has an owning pointer member, define a destructor
+如果一个类有占有的指针变量，定义析构函数
 
 ##### Reason
 
 An owned object must be `deleted` upon destruction of the object that owns it.
+一个被拥有的对象必须在拥有它的对象析构时删除
 
 ##### Example
 
