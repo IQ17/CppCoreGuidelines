@@ -3726,8 +3726,11 @@ An owned object must be `deleted` upon destruction of the object that owns it.
 ##### Example
 
 A pointer member may represent a resource.
+一个指针成员可能代表着一个资源
 [A `T*` should not do so](#Rr-ptr), but in older code, that's common.
+‘T*’这种模板指针不应该代表一个资源，但在老代码里这种情况还是很普遍的。
 Consider a `T*` a possible owner and therefore suspect.
+所以应该怀疑‘T*’可能是持有资源的
 
     template<typename T>
     class Smart_ptr {
@@ -3743,7 +3746,7 @@ Consider a `T*` a possible owner and therefore suspect.
     }
 
 Note that if you define a destructor, you must define or delete [all default operations](#Rc-five):
-
+如果你定义了析构函数，你必须定义或者删除所有的缺省操作：
     template<typename T>
     class Smart_ptr2 {
         T* p;	// BAD: vague about ownership of *p
@@ -3759,6 +3762,7 @@ Note that if you define a destructor, you must define or delete [all default ope
     }
 
 The default copy operation will just copy the `p1.p` into `p2.p` leading to a double destruction of `p1.p`. Be explicit about ownership:
+缺省的拷贝操作仅仅浅拷贝'p1.p’到'p2.p'，这会导致析构‘p1.p’两次。请明确所有权：
 
     template<typename T>
     class Smart_ptr3 {
@@ -3777,26 +3781,36 @@ The default copy operation will just copy the `p1.p` into `p2.p` leading to a do
 
 ##### Note
 
-Often the simplest way to get a destructor is to replace the pointer with a smart pointer (e.g., `std::unique_ptr`) and let the compiler arrange for proper destruction to be done implicitly.
+Often the simplest way to get a destructor is to replace the pointer with a smart pointer 
+(e.g., `std::unique_ptr`) and let the compiler arrange for proper destruction to be done implicitly.
+实现析构函数最简单的方法就是用智能指针替换普通指针（比如‘std::unique_ptr’），让编译器隐式的安排合适的析构
 
 ##### Note
 
 Why not just require all owning pointers to be "smart pointers"?
+为什么不替换所有持有资源的指针为智能指针呢？
 That would sometimes require non-trivial code changes and may affect ABIs.
+因为有时候这会需要修改可观数量的代码，并且可能影响应用二进制接口
 
 ##### Enforcement
 
 * A class with a pointer data member is suspect.
+* 怀疑带有指针成员的类
 * A class with an `owner<T>` should define its default operations.
+* 为带有‘owner<T>’的类定义缺省操作
 
 ### <a name="Rc-dtor-ref"></a> C.34: If a class has an owning reference member, define a destructor
+如果一个类有占有的引用成员，定义析构函数
 
 ##### Reason
 
 A reference member may represent a resource.
+一个引用成员可能代表一个资源
 It should not do so, but in older code, that's common.
+这种情况是不应该发生的，但是在老代码中这很常见
 See [pointer members and destructors](#Rc-dtor-ptr).
 Also, copying may lead to slicing.
+同时，拷贝可能会导致对象切割
 
 ##### Example, bad
 
@@ -3810,7 +3824,9 @@ Also, copying may lead to slicing.
     };
 
 The problem of whether `Handle` is responsible for the destruction of its `Shape` is the same as for [the pointer case](#Rc-dtor-ptr):
+‘Handle’类是否负责‘Shape’的析构这个问题和之前指针的情况一样。
 If the `Handle` owns the object referred to by `s` it must have a destructor.
+如果'Handle'占有‘s’引用的对象，那么它就必须有一个析构函数。
 
 ##### Example
 
@@ -3824,26 +3840,36 @@ If the `Handle` owns the object referred to by `s` it must have a destructor.
     };
 
 Independently of whether `Handle` owns its `Shape`, we must consider the default copy operations suspect:
+除了是否‘Handle’占有‘Shape’这个问题外，我们还必须考虑缺省拷贝操作的问题：
 
     Handle x {*new Circle{p1, 17}};  // the Handle had better own the Circle or we have a leak
     Handle y {*new Triangle{p1, p2, p3}};
     x = y;     // the default assignment will try *x.s = *y.s
 
 That `x=y` is highly suspect.
+‘x=y’这个语句非常可疑。
 Assigning a `Triangle` to a `Circle`?
+将一个'Triangle'赋值给一个'Circle'？
 Unless `Shape` has its [copy assignment `=deleted`](#Rc-copy-virtual), only the `Shape` part of `Triangle` is copied into the `Circle`.
+除非‘Shape’基类删除了它的缺省拷贝复制操作，否则‘Triangle’类中只有‘Shape’基类的部分会被拷贝到'Circle'里
 
 ##### Note
 
 Why not just require all owning references to be replaced by "smart pointers"?
+为什么不替换所有持有资源的引用为智能指针呢？
 Changing from references to smart pointers implies code changes.
+将引用改为智能指针意味着改动代码。
 We don't (yet) have smart references.
+我们还没有智能引用。
 Also, that may affect ABIs.
+并且这可能会影响应用二进制接口
 
 ##### Enforcement
 
 * A class with a reference data member is suspect.
+* 一个含有引用成员的类是可疑的
 * A class with an `owner<T>` reference should define its default operations.
+* 一个含有‘owner<T>’引用的类都应该定义缺省操作
 
 ### <a name="Rc-dtor-virtual"></a> C.35: A base class destructor should be either public and virtual, or protected and nonvirtual
 
