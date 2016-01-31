@@ -3872,13 +3872,19 @@ Also, that may affect ABIs.
 * 一个含有‘owner<T>’引用的类都应该定义缺省操作
 
 ### <a name="Rc-dtor-virtual"></a> C.35: A base class destructor should be either public and virtual, or protected and nonvirtual
+基类的析构函数应该不是公共的虚函数就是保护的非虚函数
 
 ##### Reason
 
 To prevent undefined behavior.
+防止未定义的行为发生
 If the destructor is public, then calling code can attempt to destroy a derived class object through a base class pointer, and the result is undefined if the base class's destructor is non-virtual.
+如果基类的析构函数是公共的，那么使用者可以通过基类指针销毁派生类对象，这时候如果基类的析构函数是非虚的，结果就是未定义的。
 If the destructor is protected, then calling code cannot destroy through a base class pointer and the destructor does not need to be virtual; it does need to be protected, not private, so that derived destructors can invoke it.
+如果基类的析构函数是保护的，那么使用者不能够通过基类指针销毁派生类对象，因此基类的析构函数没必要是析构函数；
+基类的析构函数需要时保护的而不是私有的，这样派生类的析构函数才能调用它。
 In general, the writer of a base class does not know the appropriate action to be done upon destruction.
+通常来说，定义基类的程序员不会知道析构时需要怎么做。
 
 ##### Discussion
 
@@ -3905,12 +3911,14 @@ See [this in the Discussion section](#Sd-dtor).
 ##### Note
 
 A virtual function defines an interface to derived classes that can be used without looking at the derived classes.
+虚函数为派生类定义了一个接口，所以我们可以在不看派生类的情况下使用它们
 If the interface allows destroying, it should be safe to do so.
+如果接口允许销毁，这种行为必须是安全的。
 
 ##### Note
 
 A destructor must be nonprivate or it will prevent using the type :
-
+析构函数不能是私有的，不然这个类型就无法使用了：
     class X {
         ~X();	// private destructor
         // ...
@@ -3924,19 +3932,27 @@ A destructor must be nonprivate or it will prevent using the type :
 
 ##### Exception
 
-We can imagine one case where you could want a protected virtual destructor: When an object of a derived type (and only of such a type) should be allowed to destroy *another* object (not itself) through a pointer to base. We haven't seen such a case in practice, though.
+We can imagine one case where you could want a protected virtual destructor: 
+我们可以想象一个我们可能需要一个保护的虚析构函数的场景：
+When an object of a derived type (and only of such a type) should be allowed to destroy *another* object (not itself) through a pointer to base. 
+一个派生类的对象可以通过基类指针销毁另一个（非它本身的）对象。
+We haven't seen such a case in practice, though.
+不过我们还没有在现实中遇到这个场景。
 
 ##### Enforcement
 
 * A class with any virtual functions should have a destructor that is either public and virtual or else protected and nonvirtual.
-
+带有虚函数的类的析构函数应该不是公共的虚函数就是一个保护的非虚函数。
 
 ### <a name="Rc-dtor-fail"></a> C.36: A destructor may not fail
+析构函数不能失败
 
 ##### Reason
 
 In general we do not know how to write error-free code if a destructor should fail.
+通常我们不知道如何写一段没有错误的代码，如果析构函数应该失败。
 The standard library requires that all classes it deals with have destructors that do not exit by throwing.
+标准库要求所有它处理的类带有不以抛出结束的析构函数
 
 ##### Example
 
@@ -3956,44 +3972,63 @@ The standard library requires that all classes it deals with have destructors th
 ##### Note
 
 Many have tried to devise a fool-proof scheme for dealing with failure in destructors.
+很多人尝试过设计一种万无一失的处理析构函数失败的方案。
 None have succeeded to come up with a general scheme.
+但是还没有人成功的提出了一种通用方案。
 This can be be a real practical problem: For example, what about a sockets that won't close?
+一个实际中可能出现的问题是：比如，如何处理不会关闭的sockets?
 The writer of a destructor does not know why the destructor is called and cannot "refuse to act" by throwing an exception.
+析构函数的作者不知道析构函数因为什么而调用了，也不能抛出异常来拒绝处理
 See [discussion](#Sd-dtor).
 To make the problem worse, many "close/release" operations are not retryable.
+使得问题更棘手的是，很多关闭/释放操作是无法重试的
 If at all possible, consider failure to close/cleanup a fundamental design error and terminate.
+如果可能，就将关闭/清理失败当作是根本上的设计错误并终止程序。
 
 ##### Note
 
 Declare a destructor `noexcept`. That will ensure that it either completes normally or terminate the program.
+声明析构函数无异常。析构函数会确保要么执行成功要么终止程序
 
 ##### Note
 
 If a resource cannot be released and the program may not fail, try to signal the failure to the rest of the system somehow
 (maybe even by modifying some global state and hope something will notice and be able to take care of the problem).
+如果一个资源无法被释放而程序不能失败，尝试通过某种方式通知系统的其他部分。
+（甚至可以尝试修改一些全局状态，并希望某些东西能够注意到并处理好问题）
 Be fully aware that this technique is special-purpose and error-prone.
+请注意到这个技巧是有其特定的目的，并且容易出错。
 Consider the "my connection will not close" example.
+对于“连接不会关闭”的例子
 Probably there is a problem at the other end of the connection and only a piece of code responsible for both ends of the connection can properly handle the problem.
+如果在连接的另一端出现了一个问题，那么可能一段负责连接两端的代码就能很好的处理问题了。
 The destructor could send a message (somehow) to the responsible part of the system, consider that to have closed the connection, and return normally.
+析构函数可以通过某种方式发送一段消息到系统的负责部分，考虑断开连接，正常退出
 
 ##### Note
 
 If a destructor uses operations that may fail, it can catch exceptions and in some cases still complete successfully
 (e.g., by using a different clean-up mechanism from the one that threw an exception).
+如果析构函数可能失败，它可以捕获异常并在一些情况下仍然正常退出
+（例如，在抛出异常的地方使用不同的释放机制）
 
 ##### Enforcement
 
 (Simple) A destructor should be declared `noexcept`.
+析构函数应该被声明为没有异常
 
 ### <a name="Rc-dtor-noexcept"></a> C.37: Make destructors `noexcept`
+让析构函数没有异常
 
 ##### Reason
 
  [A destructor may not fail](#Rc-dtor-fail). If a destructor tries to exit with an exception, it's a bad design error and the program had better terminate.
+ 如果一个析构函数尝试通过抛出异常来退出，那么这是个糟糕的设计错误，程序最好终止。
 
 ##### Enforcement
 
 (Simple) A destructor should be declared `noexcept`.
+析构函数应该被声明为没有异常
 
 ## <a name="SS-ctor"></a> C.ctor: Constructors
 
