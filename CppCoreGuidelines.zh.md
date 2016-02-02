@@ -4033,8 +4033,10 @@ If a destructor uses operations that may fail, it can catch exceptions and in so
 ## <a name="SS-ctor"></a> C.ctor: Constructors
 
 A constructor defined how an object is initialized (constructed).
+构造函数定义对象是如何被初始化（构造）的。
 
 ### <a name="Rc-ctor"></a> C.40: Define a constructor if a class has an invariant
+如果一个类有不变性就定义构造函数
 
 ##### Reason
 
@@ -4055,10 +4057,12 @@ That's what constructors are for.
     };
 
 It is often a good idea to express the invariant as an `Ensure` on the constructor.
+通常在构造函数里将不变性表示为确信是个好主意
 
 ##### Note
 
 A constructor can be used for convenience even if a class does not have an invariant. For example:
+即使类不具有不变性，使用构造函数也可以带来方便。比如：
 
     struct Rec {
         string s;
@@ -4073,6 +4077,7 @@ A constructor can be used for convenience even if a class does not have an invar
 ##### Note
 
 The C++11 initializer list rule eliminates the need for many constructors. For example:
+C++11的初始化列表规则减少了很多构造函数的需求。例如：
 
     struct Rec2{
         string s;
@@ -4084,19 +4089,24 @@ The C++11 initializer list rule eliminates the need for many constructors. For e
     Rec r2 {"Bar"};
 
 The `Rec2` constructor is redundant.
+‘Rec2’的构造函数是多余的。
 Also, the default for `int` would be better done as a [member initializer](#Rc-in-class-initializer).
+另外，比设置int的默认值更好的方式是使用member initializer
 
 **See also**: [construct valid object](#Rc-complete) and [constructor throws](#Rc-throw).
 
 ##### Enforcement
 
 * Flag classes with user-define copy operations but no constructor (a user-defined copy is a good indicator that the class has an invariant)
+* 标记那些含有用户定义拷贝操作但没有构造函数的类（需要用户定义拷贝操作意味着这个类有不变性）
 
 ### <a name="Rc-complete"></a> C.41: A constructor should create a fully initialized object
+构造函数应该创建完全初始化的对象
 
 ##### Reason
 
 A constructor establishes the invariant for a class. A user of a class should be able to assume that a constructed object is usable.
+构造函数建立类的不变性。类的用户应该能够假设构造的对象是可用的。
 
 ##### Example, bad
 
@@ -4126,13 +4136,17 @@ Compilers do not read comments.
 ##### Note
 
 If a constructor acquires a resource (to create a valid object), that resource should be [released by the destructor](#Rc-dtor-release).
+如果构造函数获取了资源（以创建一个可靠的对象），获取的资源应该在析构函数中被释放
 The idiom of having constructors acquire resources and destructors release them is called [RAII](#Rr-raii) ("Resource Acquisitions Is Initialization").
+用构造函数获取资源并由析构函数释放资源被称为RAII
 
 ### <a name="Rc-throw"></a> C.42: If a constructor cannot construct a valid object, throw an exception
+如果构造函数无法构造一个可靠的对象，就抛出异常
 
 ##### Reason
 
 Leaving behind an invalid object is asking for trouble.
+保留一个不可靠的对象意味着找麻烦
 
 ##### Example
 
@@ -4195,7 +4209,9 @@ Leaving behind an invalid object is asking for trouble.
 ##### Note
 
 For a variable definition (e.g., on the stack or as a member of another object) there is no explicit function call from which an error code could be returned.
+对于变量定义来说（例如在栈上创建或者作为其他对象的成员），没有显示的函数调用能够返回错误代码。
 Leaving behind an invalid object and relying on users to consistently check an `is_valid()` function before use is tedious, error-prone, and inefficient.
+保留一个不可靠的对象，依靠用户持续的在使用前用‘is_valid()’函数检查可用性是枯燥，易出错并且低效率的。
 
 **Exception**: There are domains, such as some hard-real-time systems (think airplane controls) where (without additional tool support) exception handling is not sufficiently predictable from a timing perspective.
 There the `is_valid()` technique must be used. In such cases, check `is_valid()` consistently and immediately to simulate [RAII](#Rr-raii).
@@ -4206,19 +4222,25 @@ If you really have to, look at [factory functions](#Rc-factory).
 ##### Note
 
 One reason people have used `init()` functions rather than doing the initialization work in a constructor has been to avoid code replication.
+人们使用‘init()’函数而不是在构造函数里初始化的一个原因是避免代码重复。
 [Delegating constructors](#Rc-delegating) and [default member initialization](#Rc-in-class-initializer) do that better.
 Another reason is been to delay initialization until an object is needed; the solution to that is often [not to declare a variable until it can be properly initialized](#Res-init)
+另一个原因是把初始化推迟到对象需要被使用时在做；解决方法通常是不要声明变量直到它能够被合适的初始化。
 
 ##### Enforcement
 
 * (Simple) Every constructor should initialize every member variable (either explicitly, via a delegating ctor call or via default construction).
+* 每个构造函数都应该初始化每个成员变量（不论是显式的还是委托的还是缺省构造）
 * (Unknown) If a constructor has an `Ensures` contract, try to see if it holds as a postcondition.
+* 如果一个构造函数有一个'保证`的合同，查看其是否是用作一个后置条件。
 
 ### <a name="Rc-default0"></a> C.43: Ensure that a class has a default constructor
+确保类有一个缺省的构造函数
 
 ##### Reason
 
 Many language and library facilities rely on default constructors to initialize their elements, e.g. `T a[10]` and `std::vector<T> v(10)`.
+很多语言和库依赖缺省构造函数来初始化元素，例如‘T a[10]’和'std::vector<T> v(10)'
 
 ##### Example , bad
 
@@ -4232,6 +4254,7 @@ Many language and library facilities rely on default constructors to initialize 
     vector<Date> vd2(1000, Date{Month::october, 7, 1885});	// alternative
 
 The default constructor is only auto-generated if there is no user-declared constructor, hence it's impossible to initialize the vector `vd1` in the example above.
+缺省构造函数只有在没有用户定义的构造函数存在的情况下才会自动生成，因此在这个例子中vector 'vd1'是无法被初始化的
 
 There is no "natural" default date (the big bang is too far back in time to be useful for most people), so this example is non-trivial.
 `{0, 0, 0}` is not a valid date in most calendar systems, so choosing that would be introducing something like floating-point's `NaN`.
@@ -4256,6 +4279,7 @@ However, most realistic `Date` classes have a "first date" (e.g. January 1, 1970
 ##### Note
 
 A class with members that all have default constructors implicitly gets a default constructor:
+当一个类的成员都有缺省构造函数时，这个类隐式的含有缺省构造函数
 
     struct X {
         string s;
@@ -4265,6 +4289,7 @@ A class with members that all have default constructors implicitly gets a defaul
     X x; // means X{{},{}}; that is the empty string and the empty vector
 
 Beware that built-in types are not properly default constructed:
+注意到内建类型是没有缺省构造的
 
     struct X {
 	   string s;
@@ -4280,9 +4305,13 @@ Beware that built-in types are not properly default constructed:
     }
 
 Statically allocated objects of built-in types are by default initialized to `0`, but local built-in variables are not.
+静态分配的内建类型对象会被初始化为0，但是局部的内建变量不会被初始化为0
 Beware that your compiler may default initialize local built-in variables, whereas an optimized build will not.
+注意到编译器缺省设置时可能会初始化内建类型的局部变量，但在优化条件下不会
 Thus, code like the example above may appear to work, but it relies on undefined behavior.
+所以，例如上面例子中的代码可能可以运行，但是这依赖于未定义的行为。
 Assuming that you want initialization, an explicit default initialization can help:
+如果你希望初始化内建类型的局部变量，一个显式的缺省初始化可以实现：
 
     struct X {
 	   string s;
@@ -4293,12 +4322,15 @@ Assuming that you want initialization, an explicit default initialization can he
 ##### Enforcement
 
 * Flag classes without a default constructor
+* 标记出没有缺省构造函数的类
 
 ### <a name="Rc-default00"></a> C.44: Prefer default constructors to be simple and non-throwing
+倾向于使用简单且不抛出异常的缺省构造函数
 
 ##### Reason
 
 Being able to set a value to "the default" without operations that might fail simplifies error handling and reasoning about move operations.
+能够无误的为缺省赋值可以简化错误处理和推断移动操作
 
 ##### Example, problematic
 
@@ -4338,6 +4370,7 @@ Setting a `Vector1` to empty after detecting an error is trivial.
 ##### Enforcement
 
 * Flag throwing default constructors
+* 标记出抛出异常的缺省构造函数
 
 ### <a name="Rc-default"></a> C.45: Don't define a default constructor that only initializes data members; use in-class member initializers instead
 
